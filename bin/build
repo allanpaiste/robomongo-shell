@@ -4,5 +4,20 @@ BIN_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"       # Get director
 PROJECT_DIR=$(dirname $BIN_DIR)                                   # Get root directory of project
 source $BIN_DIR/common/setup $1
 
+# Find OpenSSL directory
+OPENSSL_PATH=UNKNOWN
+SEARCH=ssl
+for i in $(echo $ROBOMONGO_CMAKE_PREFIX_PATH | tr ";" "\n")
+ do
+  if echo "$i" | grep -q "$SEARCH"; then
+   OPENSSL_PATH=$i
+  fi
+done
+if [ $OPENSSL_PATH == UNKNOWN ]; then
+ echo -e "Error: Build failed, ROBOMONGO_CMAKE_PREFIX_PATH must contain correct path to openssl. (i.e. C:\openssl-1.0.1p)"
+ exit 1
+fi
+
+# Build mongo
 cd $PROJECT_DIR
-scons mongo -j8 $BUILD_TYPE_SWITCH $MAC_SDK_SWITCH "${@:2}"
+scons mongo --ssl CPPPATH=$OPENSSL_PATH/include LIBPATH=$OPENSSL_PATH/lib -j8 $BUILD_TYPE_SWITCH $MAC_SDK_SWITCH "${@:2}"
