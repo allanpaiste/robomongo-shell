@@ -12,9 +12,10 @@ set PROJECT_DIR=%BIN_DIR%\..
 
 rem Find path to OpenSSL folder
 set OPENSSL_PATH=UNKNOWN
-set SEARCH=ssl
 for %%A in ("%ROBOMONGO_CMAKE_PREFIX_PATH:;=";"%") do ( 
-  echo %%A|findstr /lic:"%SEARCH%" >nul && set "OPENSSL_PATH=%%A"
+  if exist %%A/include/openssl/ssl.h (
+    set OPENSSL_PATH=%%A
+  )
 )
 if %OPENSSL_PATH%==UNKNOWN ( 
   echo Error: Build failed, ROBOMONGO_CMAKE_PREFIX_PATH must contain correct path to openssl. (i.e. C:\openssl-1.0.1p^) 
