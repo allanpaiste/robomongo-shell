@@ -6,15 +6,14 @@ source $BIN_DIR/common/setup $1
 
 # Find OpenSSL directory
 OPENSSL_PATH=UNKNOWN
-SEARCH=ssl
 for i in $(echo $ROBOMONGO_CMAKE_PREFIX_PATH | tr ";" "\n")
  do
-  if echo "$i" | grep -q "$SEARCH"; then
+  if [ -f $i/include/openssl/ssl.h ]; then
    OPENSSL_PATH=$i
   fi
 done
 if [ $OPENSSL_PATH == UNKNOWN ]; then
- echo -e "Error: Build failed, ROBOMONGO_CMAKE_PREFIX_PATH must contain correct path to openssl. (i.e. C:\openssl-1.0.1p)"
+ echo -e "Error: Build failed, ROBOMONGO_CMAKE_PREFIX_PATH must contain correct path to openssl. (i.e. /home/user/openssl-1.0.1p_build)"
  exit 1
 fi
 
