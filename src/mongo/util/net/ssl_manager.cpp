@@ -177,6 +177,16 @@ public:
     explicit SSLManager(const SSLParams& params, bool isServer);
 
     /**
+    * Robomongo
+    * @brief    Reconfigures mongo::SSLManager and OpenSSL context according to SSLGlobalParams.
+    * @return   true on success, false otherwise
+    * @details  Need for this function comes from the fact that Robomongo can/will need to create multiple SSL 
+    *           connections unlike mongo shell client which is designed to create single connection from command line; 
+    *           so each time SSL manager and OpenSSL context need to be reconfigured using this function from Robomongo.
+    */
+    bool reconfigureSSLManager();
+
+    /**
      * Initializes an OpenSSL context according to the provided settings. Only settings which are
      * acceptable on non-blocking connections are set.
      */
@@ -562,6 +572,16 @@ void SSLManager::SSL_free(SSLConnection* conn) {
     return ::SSL_free(conn->ssl);
 }
 
+bool SSLManager::reconfigureSSLManager() {
+    Status status = initSSLContext(_clientContext.get(), getSSLGlobalParams());
+    if (!status.isOK()) {
+        return false;
+    }
+    _allowInvalidCertificates = getSSLGlobalParams().sslAllowInvalidCertificates;
+    _allowInvalidHostnames = getSSLGlobalParams().sslAllowInvalidHostnames;
+    return true;
+}
+
 Status SSLManager::initSSLContext(SSL_CTX* context, const SSLParams& params) {
     // SSL_OP_ALL - Activate all bug workaround options, to support buggy client SSL's.
     // SSL_OP_NO_SSLv2 - Disable SSL v2 support
@@ -875,6 +895,10 @@ bool SSLManager::_doneWithSSLOp(SSLConnection* conn, int status) {
 }
 
 SSLConnection* SSLManager::connect(Socket* socket) {
+    // Robomongo: If reconfiguring SSLManager fails (i.e. pemkeypass is not correct), return nullptr.
+    if (!reconfigureSSLManager()) {
+        return nullptr;
+    }
     std::unique_ptr<SSLConnection> sslConn =
         stdx::make_unique<SSLConnection>(_clientContext.get(), socket, (const char*)NULL, 0);
 
