@@ -573,8 +573,8 @@ void SSLManager::SSL_free(SSLConnection* conn) {
 }
 
 bool SSLManager::reconfigureSSLManager() {
-    Status status = initSSLContext(_clientContext.get(), getSSLGlobalParams());
-    if (!status.isOK()) {
+    if (!_initSynchronousSSLContext(&_clientContext, getSSLGlobalParams()))
+    {
         return false;
     }
     _allowInvalidCertificates = getSSLGlobalParams().sslAllowInvalidCertificates;
