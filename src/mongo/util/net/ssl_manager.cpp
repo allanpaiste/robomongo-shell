@@ -177,16 +177,6 @@ public:
     explicit SSLManager(const SSLParams& params, bool isServer);
 
     /**
-    * Robomongo
-    * @brief    Reconfigures mongo::SSLManager and OpenSSL context according to SSLGlobalParams.
-    * @return   true on success, false otherwise
-    * @details  Need for this function comes from the fact that Robomongo can/will need to create multiple SSL 
-    *           connections unlike mongo shell client which is designed to create single connection from command line; 
-    *           so each time SSL manager and OpenSSL context need to be reconfigured using this function from Robomongo.
-    */
-    bool reconfigureSSLManager();
-
-    /**
      * Initializes an OpenSSL context according to the provided settings. Only settings which are
      * acceptable on non-blocking connections are set.
      */
@@ -248,6 +238,16 @@ private:
      * be configured for blocking send/receive.
      */
     bool _initSynchronousSSLContext(UniqueSSLContext* context, const SSLParams& params);
+
+    /**
+    * Robomongo
+    * @brief    Reconfigures mongo::SSLManager and OpenSSL context according to SSLGlobalParams.
+    * @return   true on success, false otherwise
+    * @details  Need for this function comes from the fact that Robomongo can/will need to create multiple SSL
+    *           connections unlike mongo shell client which is designed to create single connection from command line;
+    *           so each time SSL manager and OpenSSL context need to be reconfigured using this function from Robomongo.
+    */
+    bool reconfigureSSLManager();
 
     /*
      * Converts time from OpenSSL return value to unsigned long long
