@@ -392,7 +392,8 @@ void ReplicaSetMonitor::createIfNeeded(const string& name, const set<HostAndPort
     globalRSMonitorManager.getOrCreateMonitor(
         ConnectionString::forReplicaSet(name, vector<HostAndPort>(servers.begin(), servers.end())));
 
-    replicaSetMonitorWatcher.safeGo();
+    // Robomongo: Disabling watcher due to a crash after a replica connection used and Robomongo closed. 
+    //replicaSetMonitorWatcher.safeGo();
 }
 
 shared_ptr<ReplicaSetMonitor> ReplicaSetMonitor::get(const std::string& name) {
