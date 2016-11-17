@@ -4,4 +4,8 @@ BIN_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"       # Get director
 PROJECT_DIR=$(dirname $BIN_DIR)                                   # Get root directory of project
 source $BIN_DIR/common/setup $1
 
+if [ ! -d $PROJECT_DIR/build ]; then
+   sudo mkdir $PROJECT_DIR/build
+fi
+
 cd $PROJECT_DIR/build && rm -rf $VARIANT_DIR/
