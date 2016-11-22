@@ -58,17 +58,21 @@ public:
         if (!StaticObserver::_destroyingStatics) {
             DeleteCriticalSection(&_cs);
         }
+        _destroyed = true;
     }
 
     void lock() {
-        EnterCriticalSection(&_cs);
+        if (!_destroyed)
+            EnterCriticalSection(&_cs);
     }
     void unlock() {
-        LeaveCriticalSection(&_cs);
+        if (!_destroyed)
+            LeaveCriticalSection(&_cs);
     }
 
 private:
     CRITICAL_SECTION _cs;
+    bool _destroyed = false;
 };
 
 #else
@@ -88,15 +92,18 @@ public:
     }
 
     void lock() {
-        verify(pthread_mutex_lock(&_lock) == 0);
+        if (!_destroyed)
+            verify(pthread_mutex_lock(&_lock) == 0);
     }
 
     void unlock() {
-        verify(pthread_mutex_unlock(&_lock) == 0);
+        if (!_destroyed)
+            verify(pthread_mutex_unlock(&_lock) == 0);
     }
 
 private:
     pthread_mutex_t _lock;
+    bool _destroyed = false;
 };
 #endif
 
