@@ -44,6 +44,15 @@ namespace mongo {
  *  facilities in all environments (if desired).  On Windows,
  *  the implementation below is faster than boost mutex.
 */
+
+/** Robomongo: 
+ *  "_destroyed" flag is added to fix insidious dead reference 
+ *  problem where global SimpleMutex object "sslManagerMtx" was being 
+ *  locked after it has been destroyed during program exit. As a result 
+ *  closing Robomongo results with crash when at least one SSL-enabled 
+ *  replica set connection is used. 
+*/
+    
 #if defined(_WIN32)
 
 class SimpleMutex {
