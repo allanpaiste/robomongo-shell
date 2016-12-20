@@ -98,6 +98,7 @@ public:
         if (!StaticObserver::_destroyingStatics) {
             verify(pthread_mutex_destroy(&_lock) == 0);
         }
+        _destroyed = true;
     }
 
     void lock() {
