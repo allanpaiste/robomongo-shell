@@ -160,17 +160,17 @@ void BackgroundJob::jobBody() {
 
 #ifdef MONGO_CONFIG_SSL
     // Robomongo:
-    // Disabling this part of the code for linux due to a core dump seen on Ubuntu 14.04
-    // which occurs when at least replica set connection used and the segmentation fault occurs 
-    // after Robomongo is closed.
-     #ifndef __linux__
+    // Disabling this part of the code for all platforms due to a core dump seen on Ubuntu,
+    // MAC and a crash on Windows debug mode only. The problem occurs when at least replica 
+    // set connection used and after Robomongo is closed.
+    /*
         // TODO(sverch): Allow people who use the BackgroundJob to also specify cleanup tasks.
         // Currently the networking code depends on this class and this class depends on the
         // networking code because of this ad hoc cleanup.
         SSLManagerInterface* manager = getSSLManager();
         if (manager)
             manager->cleanupThreadLocals();
-    #endif
+    */
 #endif
 
     {
