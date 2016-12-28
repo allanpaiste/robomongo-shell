@@ -159,12 +159,18 @@ void BackgroundJob::jobBody() {
     const bool selfDelete = _selfDelete;
 
 #ifdef MONGO_CONFIG_SSL
-    // TODO(sverch): Allow people who use the BackgroundJob to also specify cleanup tasks.
-    // Currently the networking code depends on this class and this class depends on the
-    // networking code because of this ad hoc cleanup.
-    SSLManagerInterface* manager = getSSLManager();
-    if (manager)
-        manager->cleanupThreadLocals();
+    // Robomongo:
+    // Disabling this part of the code for linux due to a core dump seen on Ubuntu 14.04
+    // which occurs when at least replica set connection used and the segmentation fault occurs 
+    // after Robomongo is closed.
+     #ifndef __linux__
+        // TODO(sverch): Allow people who use the BackgroundJob to also specify cleanup tasks.
+        // Currently the networking code depends on this class and this class depends on the
+        // networking code because of this ad hoc cleanup.
+        SSLManagerInterface* manager = getSSLManager();
+        if (manager)
+            manager->cleanupThreadLocals();
+    #endif
 #endif
 
     {
