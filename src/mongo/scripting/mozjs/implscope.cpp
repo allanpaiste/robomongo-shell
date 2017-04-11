@@ -50,6 +50,10 @@
 #include "mongo/util/log.h"
 #include "mongo/util/scopeguard.h"
 
+//#ifdef ROBOMONGO
+extern std::stringstream __logs;
+//#endif
+
 using namespace mongoutils;
 
 namespace mongo {
@@ -119,9 +123,9 @@ void MozJSImplScope::_reportError(JSContext* cx, const char* message, JSErrorRep
     if (!JSREPORT_IS_WARNING(report->flags)) {
 
         std::string exceptionMsg;
+        str::stream ss;
 
         try {
-            str::stream ss;
             ss << message;
 
             // TODO: something far more elaborate that mimics the stack printing from v8
@@ -146,6 +150,9 @@ void MozJSImplScope::_reportError(JSContext* cx, const char* message, JSErrorRep
             exceptionMsg = "Unknown error occured while processing exception";
             log() << exceptionMsg << ":" << dbe.toString() << ":" << message;
         }
+
+        // There is an operator "std::string" defined on "std::stream"
+        __logs << (std::string) ss;
 
         scope->_status = Status(
             JSErrorReportToStatus(cx, report, ErrorCodes::JSInterpreterFailure, message).code(),

@@ -222,6 +222,12 @@ protected:
     FunctionCacheMap _cachedFunctions;
     int _numTimesUsed;
     bool _lastRetIsNativeCode;  // v8 only: set to true if eval'd script returns a native func
+
+//#ifdef ROBOMONGO
+    public:
+        static void setInterruptFlag(bool flag) { _interruptFlag = flag; }
+        static volatile bool _interruptFlag;
+//#endif
 };
 
 class ScriptEngine : public KillOpListenerInterface {

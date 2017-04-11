@@ -53,6 +53,10 @@ using std::shared_ptr;
 using std::string;
 using std::unique_ptr;
 
+//#ifdef ROBOMONGO
+volatile bool Scope::_interruptFlag = false;
+//#endif
+
 AtomicInt64 Scope::_lastVersion(1);
 
 namespace {

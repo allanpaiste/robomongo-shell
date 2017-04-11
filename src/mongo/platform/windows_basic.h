@@ -115,5 +115,5 @@
 #endif
 
 #if !defined(NTDDI_VISTA) || NTDDI_VERSION < NTDDI_VISTA
-#error "MongoDB does not support Windows versions older than Windows Vista"
+//#error "MongoDB does not support Windows versions older than Windows Vista"	// Robomongo
 #endif
