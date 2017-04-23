@@ -333,8 +333,14 @@ bool Socket::secure(SSLManagerInterface* mgr, const std::string& remoteHost) {
         return false;
     }
     _sslManager = mgr;
-    _sslConnection.reset(_sslManager->connect(this));
-    mgr->parseAndValidatePeerCertificateDeprecated(_sslConnection.get(), remoteHost);
+	// Robomongo: Adding return false on nullptr due to nullptr dereferencing problem when 
+	// _sslManager->connect() is not successful 
+	SSLConnection* sslCon = _sslManager->connect(this);
+	if (!sslCon) 
+		return false;
+	
+	_sslConnection.reset(sslCon);
+	mgr->parseAndValidatePeerCertificateDeprecated(_sslConnection.get(), remoteHost);
     return true;
 }
 
