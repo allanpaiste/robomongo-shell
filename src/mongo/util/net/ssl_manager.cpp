@@ -142,6 +142,11 @@ public:
     }
 
     void lock_callback(int mode, int type, const char* file, int line) {
+		// Robomongo: Fix for empty _mutex vector access problem which occurs when 
+		//            mongo::DBClientReplicaSet::connect() is used with SSL enabled.
+		if (_mutex.empty())
+			return;
+
         if (mode & CRYPTO_LOCK) {
             _mutex[type]->lock();
         } else {
