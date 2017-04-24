@@ -87,18 +87,22 @@ public:
         if (!StaticObserver::_destroyingStatics) {
             verify(pthread_mutex_destroy(&_lock) == 0);
         }
+        _destroyed = true;
     }
 
     void lock() {
-        verify(pthread_mutex_lock(&_lock) == 0);
+        if (!_destroyed)
+            verify(pthread_mutex_lock(&_lock) == 0);
     }
 
     void unlock() {
-        verify(pthread_mutex_unlock(&_lock) == 0);
+        if (!_destroyed)
+            verify(pthread_mutex_unlock(&_lock) == 0);
     }
 
 private:
     pthread_mutex_t _lock;
+    bool _destroyed = false;    
 };
 #endif
 
