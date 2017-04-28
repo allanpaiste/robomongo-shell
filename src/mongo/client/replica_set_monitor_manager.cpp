@@ -108,7 +108,12 @@ shared_ptr<ReplicaSetMonitor> ReplicaSetMonitorManager::getOrCreateMonitor(
 
     auto newMonitor = std::make_shared<ReplicaSetMonitor>(setName, servers);
     _monitors[setName] = newMonitor;
-    newMonitor->init();
+    
+	// Robomongo:
+	// Disabling background scheduled work (replica set monitoring) due to crashes and due to the
+	// fact that it is not needed. Robomongo needs the latest status of set on request not periodically.
+	// newMonitor->init();
+
     return newMonitor;
 }
 
