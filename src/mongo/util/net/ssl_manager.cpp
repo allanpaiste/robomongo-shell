@@ -142,10 +142,10 @@ public:
     }
 
     void lock_callback(int mode, int type, const char* file, int line) {
-		// Robomongo: Fix for empty _mutex vector access problem which occurs when 
-		//            mongo::DBClientReplicaSet::connect() is used with SSL enabled.
-		if (_mutex.empty())
-			return;
+        // Robomongo: Fix for empty _mutex vector access problem which occurs when 
+        //            mongo::DBClientReplicaSet::connect() is used with SSL enabled.
+        if (_mutex.empty())
+            return;
 
         if (mode & CRYPTO_LOCK) {
             _mutex[type]->lock();
@@ -253,7 +253,7 @@ private:
                                      mongodbRolesOID.shortDescription.c_str(),
                                      mongodbRolesOID.longDescription.c_str());
     UniqueSSLContext _serverContext;  // SSL context for incoming connections
-    UniqueSSLContext _clientContext;  // SSL context for outgoing connections
+    SSL_CTX* _clientContext = nullptr;   // SSL context for outgoing connections
     bool _weakValidation;
     bool _allowInvalidCertificates;
     bool _allowInvalidHostnames;
@@ -275,7 +275,7 @@ private:
      * Init the SSL context using parameters provided in params. This SSL context will
      * be configured for blocking send/receive.
      */
-    bool _initSynchronousSSLContext(UniqueSSLContext* context,
+    bool _initSynchronousSSLContext(SSL_CTX* context,
                                     const SSLParams& params,
                                     ConnectionDirection direction);
 
@@ -518,13 +518,9 @@ SSLManagerInterface::~SSLManagerInterface() {}
 
 SSLManager::SSLManager(const SSLParams& params, bool isServer)
     : _serverContext(nullptr, _free_ssl_context),
-      _clientContext(nullptr, _free_ssl_context),
       _weakValidation(params.sslWeakCertificateValidation),
       _allowInvalidCertificates(params.sslAllowInvalidCertificates),
       _allowInvalidHostnames(params.sslAllowInvalidHostnames) {
-    if (!_initSynchronousSSLContext(&_clientContext, params, ConnectionDirection::kOutgoing)) {
-        uasserted(16768, "ssl initialization problem");
-    }
 
     // pick the certificate for use in outgoing connections,
     std::string clientPEM, clientPassword;
@@ -547,10 +543,6 @@ SSLManager::SSLManager(const SSLParams& params, bool isServer)
     }
     // SSL server specific initialization
     if (isServer) {
-        if (!_initSynchronousSSLContext(&_serverContext, params, ConnectionDirection::kIncoming)) {
-            uasserted(16562, "ssl initialization problem");
-        }
-
         if (!_parseAndValidateCertificate(params.sslPEMKeyFile,
                                           params.sslPEMKeyPassword,
                                           &_sslConfiguration.serverSubjectName,
@@ -627,12 +619,15 @@ void SSLManager::SSL_free(SSLConnection* conn) {
     return ::SSL_free(conn->ssl);
 }
 
-bool SSLManager::reconfigureSSLManager() {
-	if (!_initSynchronousSSLContext(&_clientContext, getSSLGlobalParams(), ConnectionDirection::kOutgoing))
+bool SSLManager::reconfigureSSLManager()
+{
+    _allowInvalidCertificates = getSSLGlobalParams().sslAllowInvalidCertificates;
+    _allowInvalidHostnames = getSSLGlobalParams().sslAllowInvalidHostnames;
+    
+    _clientContext = SSL_CTX_new(SSLv23_client_method());
+    if (!_initSynchronousSSLContext(_clientContext, getSSLGlobalParams(), ConnectionDirection::kOutgoing))
 		return false;
 
-	_allowInvalidCertificates = getSSLGlobalParams().sslAllowInvalidCertificates;
-	_allowInvalidHostnames = getSSLGlobalParams().sslAllowInvalidHostnames;
 	return true;
 }
 
@@ -711,16 +706,14 @@ Status SSLManager::initSSLContext(SSL_CTX* context,
     return Status::OK();
 }
 
-bool SSLManager::_initSynchronousSSLContext(UniqueSSLContext* contextPtr,
+bool SSLManager::_initSynchronousSSLContext(SSL_CTX* contextPtr,
                                             const SSLParams& params,
                                             ConnectionDirection direction) {
-    *contextPtr = UniqueSSLContext(SSL_CTX_new(SSLv23_method()), _free_ssl_context);
-
-    uassertStatusOK(initSSLContext(contextPtr->get(), params, direction));
+    uassertStatusOK(initSSLContext(contextPtr, params, direction));
 
     // If renegotiation is needed, don't return from recv() or send() until it's successful.
     // Note: this is for blocking sockets only.
-    SSL_CTX_set_mode(contextPtr->get(), SSL_MODE_AUTO_RETRY);
+    SSL_CTX_set_mode(contextPtr, SSL_MODE_AUTO_RETRY);
 
     return true;
 }
@@ -1135,7 +1128,7 @@ SSLConnection* SSLManager::connect(Socket* socket) {
 		return nullptr;
 	
     std::unique_ptr<SSLConnection> sslConn =
-        stdx::make_unique<SSLConnection>(_clientContext.get(), socket, (const char*)NULL, 0);
+        stdx::make_unique<SSLConnection>(_clientContext, socket, (const char*)NULL, 0);
 
     int ret = ::SSL_set_tlsext_host_name(sslConn->ssl, socket->remoteAddr().hostOrIp().c_str());
     if (ret != 1)
