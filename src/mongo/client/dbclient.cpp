@@ -633,7 +633,39 @@ list<BSONObj> DBClientWithCommands::getCollectionInfos(const string& db, const B
 
     // command failed
 
-    uasserted(18630, str::stream() << "listCollections failed: " << res);
+    int code = res["code"].numberInt();
+    string errmsg = res["errmsg"].valuestrsafe();
+    if (code == ErrorCodes::CommandNotFound || errmsg.find("no such cmd") != string::npos) {
+        // old version of server, ok, fall through to old code
+    }
+    else {
+        uasserted(18630, str::stream() << "listCollections failed: " << res);
+    }
+
+    // SERVER-14951 filter for old version fallback needs to db qualify the 'name' element
+    BSONObjBuilder fallbackFilter;
+    if (filter.hasField("name") && filter["name"].type() == String) {
+        fallbackFilter.append("name", db + "." + filter["name"].str());
+    }
+    fallbackFilter.appendElementsUnique(filter);
+
+    string ns = db + ".system.namespaces";
+    unique_ptr<DBClientCursor> c =
+        query(ns.c_str(), fallbackFilter.obj(), 0, 0, 0, QueryOption_SlaveOk);
+    uassert(28611, str::stream() << "listCollections failed querying " << ns, c.get());
+
+    while (c->more()) {
+        BSONObj obj = c->nextSafe();
+        string ns = obj["name"].valuestr();
+        if (ns.find("$") != string::npos)
+            continue;
+        BSONObjBuilder b;
+        b.append("name", ns.substr(db.size() + 1));
+        b.appendElementsUnique(obj);
+        infos.push_back(b.obj());
+    }
+
+    return infos;
 }
 
 bool DBClientWithCommands::exists(const string& ns) {
@@ -1232,14 +1264,34 @@ list<BSONObj> DBClientWithCommands::getIndexSpecs(const string& ns, int options)
 
         return specs;
     }
-    int code = res["code"].numberInt();
 
-    if (code == ErrorCodes::NamespaceNotFound) {
+    // command failed
+
+    int code = res["code"].numberInt();
+    string errmsg = res["errmsg"].valuestrsafe();
+    if (code == ErrorCodes::CommandNotFound || errmsg.find("no such cmd") != string::npos) {
+        // old version of server, ok, fall through to old code
+    }
+    else if (code == ErrorCodes::NamespaceNotFound) {
         return specs;
     }
-    uasserted(18631, str::stream() << "listIndexes failed: " << res);
-}
+    else {
+        uasserted(18631, str::stream() << "listIndexes failed: " << res);
+    }
 
+    // fallback to querying system.indexes
+    // TODO(spencer): Remove fallback behavior after 3.0
+    unique_ptr<DBClientCursor> cursor =
+        query(NamespaceString(ns).getSystemIndexesCollection(), BSON("ns" << ns), 0, 0, 0, options);
+    uassert(28612, str::stream() << "listIndexes failed querying " << ns, cursor.get());
+
+    while (cursor->more()) {
+        BSONObj spec = cursor->nextSafe();
+        specs.push_back(spec.getOwned());
+    }
+
+    return specs;
+}
 
 void DBClientWithCommands::dropIndex(const string& ns, BSONObj keys) {
     dropIndex(ns, genIndexName(keys));
