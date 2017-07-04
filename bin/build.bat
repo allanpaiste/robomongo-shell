@@ -23,11 +23,18 @@ if %OPENSSL_PATH%==UNKNOWN (
 ) 
 set OPENSSL_PATH=%OPENSSL_PATH:"=%
 
+rem Set build type
+SET BUILD_TYPE=--release
+if "%1%"=="--dbg" (
+  SET BUILD_TYPE=--dbg
+)
+
 rem -----------------------------------
 rem - Execution
 rem -----------------------------------
 
 cd "%PROJECT_DIR%
 
-rem Build mongo shell in release mode
-scons mongo.exe --ssl CPPPATH=%OPENSSL_PATH%\inc32 LIBPATH=%OPENSSL_PATH%\out32dll -j8 --release --dynamic-windows %*
+rem Build mongo shell
+echo Building in %BUILD_TYPE% mode:
+scons mongo.exe --ssl CPPPATH=%OPENSSL_PATH%\inc32 LIBPATH=%OPENSSL_PATH%\out32dll -j8 --dynamic-windows %*
