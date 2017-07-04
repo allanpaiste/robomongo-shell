@@ -17,6 +17,6 @@ if [ $OPENSSL_PATH == UNKNOWN ]; then
  exit 1
 fi
 
-# Build mongo
+# Build mongo in release mode by default (--dbg for debug mode)
 cd $PROJECT_DIR
-scons mongo --ssl CPPPATH=$OPENSSL_PATH/include LIBPATH=$OPENSSL_PATH/lib -j8 $BUILD_TYPE_SWITCH $MAC_SDK_SWITCH "${@:2}"
+scons mongo --ssl CPPPATH=$OPENSSL_PATH/include LIBPATH=$OPENSSL_PATH/lib -j8 $MAC_SDK_SWITCH "${@:2}"

@@ -8,4 +8,11 @@ if [ ! -d $PROJECT_DIR/build ]; then
    sudo mkdir $PROJECT_DIR/build
 fi
 
-cd $PROJECT_DIR/build && rm -rf $VARIANT_DIR/
+# Set path according to build type
+# "/opt" for release, "/debug" for debug mode
+BUILD_PATH=opt
+if [ "$2" == "--dbg" ]; then
+  BUILD_PATH=debug
+fi
+
+cd $PROJECT_DIR/build && rm -rf $BUILD_PATH/
