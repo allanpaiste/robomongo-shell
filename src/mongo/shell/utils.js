@@ -607,8 +607,13 @@ shellPrintHelper = function(x) {
     var p = x.tojson;
     if (typeof p == "function")
         print(x.tojson());
-    else
-        print(tojson(x));
+    else {
+        // Robomongo
+        // Do not convert to JSON
+        print(x);
+        //print(tojson(x));
+    }
+
 };
 
 shellAutocomplete = function(

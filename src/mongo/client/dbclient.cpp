@@ -600,6 +600,25 @@ bool DBClientBase::eval(const string& dbname, const string& jscode) {
     return eval(dbname, jscode, info, retValue);
 }
 
+list<string> DBClientBase::getDatabaseNames() {
+    BSONObj info;
+    uassert(
+        10005,
+        "listdatabases failed",
+        runCommand(
+            "admin", BSON("listDatabases" << 1 << "nameOnly" << true), info, QueryOption_SlaveOk));
+    uassert(10006, "listDatabases.databases not array", info["databases"].type() == Array);
+
+    list<string> names;
+
+    BSONObjIterator i(info["databases"].embeddedObjectUserCheck());
+    while (i.more()) {
+        names.push_back(i.next().embeddedObjectUserCheck()["name"].valuestr());
+    }
+
+    return names;
+}
+
 list<BSONObj> DBClientBase::getCollectionInfos(const string& db, const BSONObj& filter) {
     list<BSONObj> infos;
 

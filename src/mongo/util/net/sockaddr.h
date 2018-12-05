@@ -55,6 +55,74 @@ namespace mongo {
 typedef short sa_family_t;
 typedef int socklen_t;
 
+// Todo: Add Windows switch if required
+/* ----- Robo ----- */
+#ifdef BUILDING_ROBO
+
+typedef unsigned short USHORT;
+typedef USHORT ADDRESS_FAMILY;
+typedef char CHAR;
+
+//
+// Portable socket structure (RFC 2553).
+//
+
+//
+// Desired design of maximum size and alignment.
+// These are implementation specific.
+//
+#define _SS_MAXSIZE 128                 // Maximum size
+#define _SS_ALIGNSIZE (sizeof(__int64)) // Desired alignment
+
+//
+// Definitions used for sockaddr_storage structure paddings design.
+//
+
+#if(_WIN32_WINNT >= 0x0600)
+#define _SS_PAD1SIZE (_SS_ALIGNSIZE - sizeof(USHORT))
+#define _SS_PAD2SIZE (_SS_MAXSIZE - (sizeof(USHORT) + _SS_PAD1SIZE + _SS_ALIGNSIZE))
+#else
+#define _SS_PAD1SIZE (_SS_ALIGNSIZE - sizeof (short))
+#define _SS_PAD2SIZE (_SS_MAXSIZE - (sizeof (short) + _SS_PAD1SIZE \
+                                                    + _SS_ALIGNSIZE))
+#endif //(_WIN32_WINNT >= 0x0600)
+
+struct sockaddr_storage {
+    ADDRESS_FAMILY ss_family;      // address family
+
+    CHAR __ss_pad1[_SS_PAD1SIZE];  // 6 byte pad, this is to make
+                                   //   implementation specific pad up to
+                                   //   alignment field that follows explicit
+                                   //   in the data structure
+    __int64 __ss_align;            // Field to force desired structure
+    CHAR __ss_pad2[_SS_PAD2SIZE];  // 112 byte pad to achieve desired size;
+                                   //   _SS_MAXSIZE value minus size of
+                                   //   ss_family, __ss_pad1, and
+                                   //   __ss_align fields is 112
+};
+
+#undef _SS_PAD1SIZE
+#undef _SS_PAD2SIZE
+
+//
+// Structure used to store most addresses.
+//
+typedef unsigned short u_short;
+
+struct sockaddr {
+
+#if (_WIN32_WINNT < 0x0600)
+    u_short sa_family;
+#else
+    ADDRESS_FAMILY sa_family;           // Address family.
+#endif //(_WIN32_WINNT < 0x0600)
+
+    CHAR sa_data[14];                   // Up to 14 bytes of direct address.
+};
+
+#endif
+/* ----- Robo end ----- */
+
 // This won't actually be used on windows
 struct sockaddr_un {
     short sun_family;

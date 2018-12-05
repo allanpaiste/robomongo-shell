@@ -55,7 +55,9 @@ using std::string;
 using std::unique_ptr;
 
 AtomicInt64 Scope::_lastVersion(1);
-
+//#ifdef ROBOMONGO
+volatile bool Scope::_interruptFlag = false;
+//#endif
 
 namespace {
 
