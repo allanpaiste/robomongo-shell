@@ -609,10 +609,10 @@ public:
         return true;
     }
 
+    // Robo 1.3
     /**
-    get a list of all the current databases
-    uses the { listDatabases : 1 } command.
-    throws on error
+        Get a list of all the current databases uses the { listDatabases : 1 } command.
+        Throws on error
     */
     std::list<std::string> getDatabaseNames();
 

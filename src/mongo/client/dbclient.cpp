@@ -600,6 +600,7 @@ bool DBClientBase::eval(const string& dbname, const string& jscode) {
     return eval(dbname, jscode, info, retValue);
 }
 
+// Robo 1.3
 list<string> DBClientBase::getDatabaseNames() {
     BSONObj info;
     uassert(
