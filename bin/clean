@@ -11,8 +11,9 @@ fi
 # Set path according to build type
 # "/opt" for release, "/debug" for debug mode
 BUILD_PATH=opt
-if [ "$2" == "--dbg" ]; then
+if [ "$1" == "debug" ]; then
   BUILD_PATH=debug
 fi
 
+echo Deleting files under build/$BUILD_PATH
 cd $PROJECT_DIR/build && rm -rf $BUILD_PATH/

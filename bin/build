@@ -17,6 +17,16 @@ if [ $OPENSSL_PATH == UNKNOWN ]; then
  exit 1
 fi
 
-# Build mongo in release mode by default (--dbg for debug mode)
+# Build mongo in release mode by default 
+# Hint: Type 'build debug' for debug mode)
+BUILD_TYPE_STR=release
+if [ $1 == debug ]; then
+  BUILD_TYPE=--dbg
+  BUILD_TYPE_STR=debug
+fi
+
 cd $PROJECT_DIR
-scons mongo --ssl CPPPATH=$OPENSSL_PATH/include LIBPATH=$OPENSSL_PATH/lib -j8 "${@:2}"
+echo -------------------------------------
+echo Building in $BUILD_TYPE_STR mode:
+echo -------------------------------------
+scons mongo --ssl CPPPATH=$OPENSSL_PATH/include LIBPATH=$OPENSSL_PATH/lib -j8 $BUILD_TYPE
