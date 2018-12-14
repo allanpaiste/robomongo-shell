@@ -320,6 +320,7 @@ Status DBClientConnection::connectSocketOnly(const HostAndPort& serverAddress) {
 
 #endif
 
+    getSSLManager()->reinitiateSSLManager();
     auto tl = getGlobalServiceContext()->getTransportLayer();
     auto sws = tl->connect(serverAddress, sslMode, _socketTimeout.value_or(Milliseconds{5000}));
     if (!sws.isOK()) {

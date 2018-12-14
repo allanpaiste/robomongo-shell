@@ -262,6 +262,16 @@ public:
     explicit SSLManagerWindows(const SSLParams& params, bool isServer);
 
     /**
+    * Robomongo
+    * @brief    Reconfigures and reinitiates mongo::SSLManager as client
+    * @return   true on success, false otherwise
+    * @details  Need for this function comes from the fact that Robomongo can/will need to create multiple SSL
+    *           connections unlike mongo shell client which is designed to create single connection from command line;
+    *           so each time SSL manager and OpenSSL context need to be reconfigured using this function from Robomongo.
+    */
+    bool reinitiateSSLManager();
+
+    /**
      * Initializes an OpenSSL context according to the provided settings. Only settings which are
      * acceptable on non-blocking connections are set.
      */
@@ -310,7 +320,6 @@ private:
 
     Status _initChainEngines(CAEngine* engine);
 
-private:
     bool _weakValidation;
     bool _allowInvalidCertificates;
     bool _allowInvalidHostnames;
@@ -428,6 +437,22 @@ SSLManagerWindows::SSLManagerWindows(const SSLParams& params, bool isServer)
 
     uassertStatusOK(_initChainEngines(&_serverEngine));
     uassertStatusOK(_initChainEngines(&_clientEngine));
+}
+
+
+/* Trying to replicate the SSL client related parts of the ctor */
+bool SSLManagerWindows::reinitiateSSLManager()
+{
+    auto const& sslParams = getSSLGlobalParams();
+    _weakValidation = sslParams.sslWeakCertificateValidation;
+    _allowInvalidCertificates = sslParams.sslAllowInvalidCertificates;
+    _allowInvalidHostnames = sslParams.sslAllowInvalidHostnames;
+    _suppressNoCertificateWarning = sslParams.suppressNoTLSPeerCertificateWarning;
+
+    return (_loadCertificates(sslParams).isOK() &&
+            initSSLContext(&_clientCred, sslParams, ConnectionDirection::kOutgoing).isOK() &&
+            _initChainEngines(&_serverEngine).isOK()
+    );
 }
 
 StatusWith<UniqueCertChainEngine> initChainEngine(CERT_CHAIN_ENGINE_CONFIG* chainEngineConfig,
