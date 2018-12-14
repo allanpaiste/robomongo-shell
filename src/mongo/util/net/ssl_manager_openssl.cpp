@@ -336,6 +336,16 @@ public:
     explicit SSLManagerOpenSSL(const SSLParams& params, bool isServer);
 
     /**
+    * Robomongo
+    * @brief    Reconfigures and reinitiates mongo::SSLManager
+    * @return   true on success, false otherwise
+    * @details  Need for this function comes from the fact that Robomongo can/will need to create multiple SSL
+    *           connections unlike mongo shell client which is designed to create single connection from command line;
+    *           so each time SSL manager and OpenSSL context need to be reconfigured using this function from Robomongo.
+    */
+    bool reinitiateSSLManager();
+
+    /**
      * Initializes an OpenSSL context according to the provided settings. Only settings which are
      * acceptable on non-blocking connections are set.
      */
@@ -613,7 +623,8 @@ SSLManagerOpenSSL::SSLManagerOpenSSL(const SSLParams& params, bool isServer)
       _weakValidation(params.sslWeakCertificateValidation),
       _allowInvalidCertificates(params.sslAllowInvalidCertificates),
       _allowInvalidHostnames(params.sslAllowInvalidHostnames),
-      _suppressNoCertificateWarning(params.suppressNoTLSPeerCertificateWarning) {
+      _suppressNoCertificateWarning(params.suppressNoTLSPeerCertificateWarning) {     
+
     if (!_initSynchronousSSLContext(&_clientContext, params, ConnectionDirection::kOutgoing)) {
         uasserted(16768, "ssl initialization problem");
     }
@@ -654,6 +665,37 @@ SSLManagerOpenSSL::SSLManagerOpenSSL(const SSLParams& params, bool isServer)
             CertificateExpirationMonitor(_sslConfiguration.serverCertificateExpirationDate);
     }
 }
+
+/* Trying to replicate the SSL client related parts of the ctor */
+bool SSLManagerOpenSSL::reinitiateSSLManager() 
+{
+    auto const& params = getSSLGlobalParams();
+    _weakValidation = params.sslWeakCertificateValidation;
+    _allowInvalidCertificates = params.sslAllowInvalidCertificates;
+    _allowInvalidHostnames = params.sslAllowInvalidHostnames;
+    _suppressNoCertificateWarning = params.suppressNoTLSPeerCertificateWarning;
+
+    if (!_initSynchronousSSLContext(&_clientContext, params, ConnectionDirection::kOutgoing))
+        return false;
+
+    // pick the certificate for use in outgoing connections,
+    std::string clientPEM, clientPassword;
+    if (params.sslClusterFile.empty()) {
+        // We are either a client, or a server without a cluster key,
+        // so use the PEM key file, if specified
+        clientPEM = params.sslPEMKeyFile;
+        clientPassword = params.sslPEMKeyPassword;
+    } 
+
+    if (!clientPEM.empty()) {
+        if (!_parseAndValidateCertificate(
+                clientPEM, clientPassword, &_sslConfiguration.clientSubjectName, NULL)) {
+            uasserted(916941, "ssl initialization problem");
+        }
+    }
+
+    return true;
+ }
 
 int SSLManagerOpenSSL::password_cb(char* buf, int num, int rwflag, void* userdata) {
     // Unless OpenSSL misbehaves, num should always be positive
