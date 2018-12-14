@@ -1054,6 +1054,16 @@ class SSLManagerApple : public SSLManagerInterface {
 public:
     explicit SSLManagerApple(const SSLParams& params, bool isServer);
 
+    /**
+    * Robomongo
+    * @brief    Reconfigures and reinitiates mongo::SSLManager
+    * @return   true on success, false otherwise
+    * @details  Need for this function comes from the fact that Robomongo can/will need to create multiple SSL
+    *           connections unlike mongo shell client which is designed to create single connection from command line;
+    *           so each time SSL manager and OpenSSL context need to be reconfigured using this function from Robomongo.
+    */
+    bool reinitiateSSLManager();
+
     Status initSSLContext(asio::ssl::apple::Context* context,
                           const SSLParams& params,
                           ConnectionDirection direction) final;
@@ -1184,6 +1194,45 @@ StatusWith<std::pair<::SSLProtocol, ::SSLProtocol>> parseProtocolRange(const SSL
     auto protoMax = tls12 ? ::kTLSProtocol12 : tls11 ? ::kTLSProtocol11 : ::kTLSProtocol1;
 
     return std::pair<::SSLProtocol, ::SSLProtocol>(protoMin, protoMax);
+}
+
+/* Trying to replicate the SSL client related parts of the SSLManagerWindows ctor */
+bool SSLManagerApple::reinitiateSSLManager()
+{
+    auto const& params = getSSLGlobalParams();
+    _weakValidation = params.sslWeakCertificateValidation;
+    _allowInvalidCertificates = params.sslAllowInvalidCertificates;
+    _allowInvalidHostnames = params.sslAllowInvalidHostnames;
+    _suppressNoCertificateWarning = params.suppressNoTLSPeerCertificateWarning;
+
+    if (!initSSLContext(&_clientCtx, params, ConnectionDirection::kOutgoing).isOK())
+        return false;
+
+    if (_clientCtx.certs) {
+       _sslConfiguration.clientSubjectName =
+           uassertStatusOK(certificateGetSubject(_clientCtx.certs.get()));
+    }
+
+    if (!params.sslCAFile.empty()) {
+       auto ca = uassertStatusOK(loadPEM(params.sslCAFile, "", kLoadPEMStripKeys));
+       _clientCA = std::move(ca);
+       _sslConfiguration.hasCA = _clientCA && ::CFArrayGetCount(_clientCA.get());
+    }
+
+    if (!params.sslCertificateSelector.empty() || !params.sslClusterCertificateSelector.empty()) {
+       // By using the system keychain, we acknowledge it exists.
+       _sslConfiguration.hasCA = true;
+    }
+
+    if (!_clientCA) {
+       // No explicit CA was specified, use the Keychain CA explicitly on client connects,
+       // even though we're going to pretend it doesn't exist on server.
+       ::CFArrayRef certs = nullptr;
+       uassertOSStatusOK(SecTrustCopyAnchorCertificates(&certs));
+       _clientCA.reset(certs);
+    }
+
+    return true;
 }
 
 Status SSLManagerApple::initSSLContext(asio::ssl::apple::Context* context,
