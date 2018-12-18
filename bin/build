@@ -26,13 +26,21 @@ if [ $1 == debug ]; then
   BUILD_TYPE_STR=debug
 fi
 
+# MacOS
 # 1. MongoDB 4.x requires macOS 10.10 or later
 # 2. src/mongo/util/net/ssl_manager_apple.cpp:977:18: error: 'SSLCopyRequestedPeerName' 
 #    is only available on macOS 10.11 or newer
-BUILD_FLAGS="-mmacosx-version-min=10.11 -Wno-unused-function"
+MACOS_FLAGS="-mmacosx-version-min=10.11 -Wno-unused-function"
 
 cd $PROJECT_DIR
 echo -------------------------------------
 echo Building in $BUILD_TYPE_STR mode:
 echo -------------------------------------
-scons mongo --ssl CCFLAGS=$BUILD_FLAGS LINKFLAGS=$BUILD_FLAGS CPPPATH=$OPENSSL_PATH/include LIBPATH=$OPENSSL_PATH/lib -j8 $BUILD_TYPE
+
+if [ "$(uname)" == "Darwin" ]; then
+  scons mongo --ssl CCFLAGS=$MACOS_FLAGS LINKFLAGS=$MACOS_FLAGS CPPPATH=$OPENSSL_PATH/include LIBPATH=$OPENSSL_PATH/lib -j8 $BUILD_TYPE
+elif [ "$(expr substr $(uname -s) 1 5)" == "Linux" ]; then
+  scons mongo --ssl CPPPATH=$OPENSSL_PATH/include LIBPATH=$OPENSSL_PATH/lib -j8 $BUILD_TYPE
+else 
+  echo -e "Error: Unsupported platform" 
+fi
