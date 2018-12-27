@@ -129,6 +129,7 @@ void MozJSImplScope::_reportError(JSContext* cx, const char* message, JSErrorRep
     if (!JSREPORT_IS_WARNING(report->flags)) {
 
         std::string exceptionMsg;
+        // Robo
         str::stream ss;
 
         try {
@@ -146,15 +147,18 @@ void MozJSImplScope::_reportError(JSContext* cx, const char* message, JSErrorRep
                 auto str = ValueWriter(cx, stack).toString();
 
                 if (str.empty()) {
-                    ss << " @" << report->filename << ":" << report->lineno << ":" << report->column
+                    ss << " \nDetails: @" << report->filename << ":" << report->lineno << ":" << report->column
                        << "\n";
                 } else {
-                    ss << " :\n" << str;
+                    ss << " \nDetails:\n" << str;
                 }
 
                 scope->_status =
                     jsExceptionToStatus(cx, excn, ErrorCodes::JSInterpreterFailure, message)
                         .withReason(ss);
+
+                // Robo
+                __logs << ss;
 
                 return;
             }
@@ -165,8 +169,8 @@ void MozJSImplScope::_reportError(JSContext* cx, const char* message, JSErrorRep
             log() << exceptionMsg << ":" << dbe.toString() << ":" << message;
         }
 
-        // There is an operator "std::string" defined on "std::stream"
-        __logs << (std::string) ss;
+        // Robo
+        __logs << ss;
 
         scope->_status =
             JSErrorReportToStatus(cx, report, ErrorCodes::JSInterpreterFailure, message)
