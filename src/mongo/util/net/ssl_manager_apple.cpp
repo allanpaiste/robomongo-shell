@@ -1055,7 +1055,7 @@ public:
     explicit SSLManagerApple(const SSLParams& params, bool isServer);
 
     /**
-    * Robomongo
+    * Robo 1.3
     * @brief    Reconfigures and reinitiates mongo::SSLManager
     * @return   true on success, false otherwise
     * @details  Need for this function comes from the fact that Robomongo can/will need to create multiple SSL

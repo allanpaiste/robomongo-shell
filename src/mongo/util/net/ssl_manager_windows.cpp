@@ -262,7 +262,7 @@ public:
     explicit SSLManagerWindows(const SSLParams& params, bool isServer);
 
     /**
-    * Robomongo
+    * Robo 1.3
     * @brief    Reconfigures and reinitiates mongo::SSLManager as client
     * @return   true on success, false otherwise
     * @details  Need for this function comes from the fact that Robomongo can/will need to create multiple SSL
@@ -440,7 +440,6 @@ SSLManagerWindows::SSLManagerWindows(const SSLParams& params, bool isServer)
     //uassertStatusOK(_initChainEngines(&_clientEngine));
     /* --- Robo 1.3 --- */
 }
-
 
 bool SSLManagerWindows::reinitiateSSLManager()
 {
