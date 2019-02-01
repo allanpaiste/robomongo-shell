@@ -462,6 +462,16 @@ StatusWith<SessionHandle> TransportLayerASIO::connect(HostAndPort peer,
     if (sslMode == kEnableSSL ||
         (sslMode == kGlobalSSLMode && ((globalSSLMode == SSLParams::SSLMode_preferSSL) ||
                                        (globalSSLMode == SSLParams::SSLMode_requireSSL)))) {
+
+        // --- Robo 1.3: Need to reset _egressSSLContext for each connection
+        _egressSSLContext.release();
+        _egressSSLContext = stdx::make_unique<asio::ssl::context>(asio::ssl::context::sslv23);
+        Status status =
+            getSSLManager()->initSSLContext(_egressSSLContext->native_handle(),
+                                            getSSLGlobalParams(),
+                                            SSLManagerInterface::ConnectionDirection::kOutgoing);
+        // ---
+
         auto sslStatus = session->handshakeSSLForEgress(peer).getNoThrow();
         if (!sslStatus.isOK()) {
             return sslStatus;

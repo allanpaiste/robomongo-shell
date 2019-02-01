@@ -400,47 +400,48 @@ SSLManagerWindows::SSLManagerWindows(const SSLParams& params, bool isServer)
       _allowInvalidHostnames(params.sslAllowInvalidHostnames),
       _suppressNoCertificateWarning(params.suppressNoTLSPeerCertificateWarning) {
 
-    if (params.sslFIPSMode) {
-        BOOLEAN enabled = FALSE;
-        BCryptGetFipsAlgorithmMode(&enabled);
-        if (!enabled) {
-            severe() << "FIPS modes is not enabled on the operating system.";
-            fassertFailedNoTrace(50744);
-        }
-    }
+    /* --- Robo 1.3
+    *      Disabling all ctor code, Robo will run client related parts for each new connection in reinitiateSSLManager()
+    */ 
+    //if (params.sslFIPSMode) {
+    //    BOOLEAN enabled = FALSE;
+    //    BCryptGetFipsAlgorithmMode(&enabled);
+    //    if (!enabled) {
+    //        severe() << "FIPS modes is not enabled on the operating system.";
+    //    }
+    //}
 
-    uassertStatusOK(_loadCertificates(params));
+    // uassertStatusOK(_loadCertificates(params));
+    //uassertStatusOK(initSSLContext(&_clientCred, params, ConnectionDirection::kOutgoing));
 
-    uassertStatusOK(initSSLContext(&_clientCred, params, ConnectionDirection::kOutgoing));
+    //// Certificates may not have been loaded. This typically occurs in unit tests.
+    //if (_clientCertificates[0] != nullptr) {
+    //    uassertStatusOK(_validateCertificate(
+    //        _clientCertificates[0], &_sslConfiguration.clientSubjectName, NULL));
+    //}
 
-    // Certificates may not have been loaded. This typically occurs in unit tests.
-    if (_clientCertificates[0] != nullptr) {
-        uassertStatusOK(_validateCertificate(
-            _clientCertificates[0], &_sslConfiguration.clientSubjectName, NULL));
-    }
+    //// SSL server specific initialization
+    //if (isServer) {
+    //    uassertStatusOK(initSSLContext(&_serverCred, params, ConnectionDirection::kIncoming));
 
-    // SSL server specific initialization
-    if (isServer) {
-        uassertStatusOK(initSSLContext(&_serverCred, params, ConnectionDirection::kIncoming));
+    //    if (_serverCertificates[0] != nullptr) {
+    //        uassertStatusOK(
+    //            _validateCertificate(_serverCertificates[0],
+    //                                 &_sslConfiguration.serverSubjectName,
+    //                                 &_sslConfiguration.serverCertificateExpirationDate));
+    //    }
 
-        if (_serverCertificates[0] != nullptr) {
-            uassertStatusOK(
-                _validateCertificate(_serverCertificates[0],
-                                     &_sslConfiguration.serverSubjectName,
-                                     &_sslConfiguration.serverCertificateExpirationDate));
-        }
+    //    // Monitor the server certificate's expiration
+    //    static CertificateExpirationMonitor task =
+    //        CertificateExpirationMonitor(_sslConfiguration.serverCertificateExpirationDate);
+    //}
 
-        // Monitor the server certificate's expiration
-        static CertificateExpirationMonitor task =
-            CertificateExpirationMonitor(_sslConfiguration.serverCertificateExpirationDate);
-    }
-
-    uassertStatusOK(_initChainEngines(&_serverEngine));
-    uassertStatusOK(_initChainEngines(&_clientEngine));
+    //uassertStatusOK(_initChainEngines(&_serverEngine));
+    //uassertStatusOK(_initChainEngines(&_clientEngine));
+    /* --- Robo 1.3 --- */
 }
 
 
-/* Trying to replicate the SSL client related parts of the ctor */
 bool SSLManagerWindows::reinitiateSSLManager()
 {
     auto const& sslParams = getSSLGlobalParams();
@@ -449,10 +450,13 @@ bool SSLManagerWindows::reinitiateSSLManager()
     _allowInvalidHostnames = sslParams.sslAllowInvalidHostnames;
     _suppressNoCertificateWarning = sslParams.suppressNoTLSPeerCertificateWarning;
 
-    return (_loadCertificates(sslParams).isOK() &&
-            initSSLContext(&_clientCred, sslParams, ConnectionDirection::kOutgoing).isOK() &&
-            _initChainEngines(&_serverEngine).isOK()
-    );
+    // Try to replicate the client related parts of the SSLManagerWindows ctor
+    if (!_loadCertificates(sslParams).isOK() ||
+        !initSSLContext(&_clientCred, sslParams, ConnectionDirection::kOutgoing).isOK() ||
+        !_initChainEngines(&_clientEngine).isOK())
+        return false;
+
+    return true; 
 }
 
 StatusWith<UniqueCertChainEngine> initChainEngine(CERT_CHAIN_ENGINE_CONFIG* chainEngineConfig,
@@ -1189,7 +1193,9 @@ Status SSLManagerWindows::_loadCertificates(const SSLParams& params) {
         }
 
         _pemCertificate = std::move(swCertificate.getValue());
-    }
+    } 
+    else // Robo 1.3
+        std::get<0>(_pemCertificate).release();
 
     // Load the cluster PEM file, only applies to server side code
     if (!params.sslClusterFile.empty()) {
@@ -1223,6 +1229,8 @@ Status SSLManagerWindows::_loadCertificates(const SSLParams& params) {
 
         _clientEngine.CAstore = std::move(swChain.getValue());
     }
+    else // Robo 1.3
+        _sslConfiguration.hasCA = false;
 
     const auto serverCAFile =
         params.sslClusterCAFile.empty() ? params.sslCAFile : params.sslClusterCAFile;
