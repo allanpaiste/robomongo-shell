@@ -625,48 +625,51 @@ SSLManagerOpenSSL::SSLManagerOpenSSL(const SSLParams& params, bool isServer)
       _allowInvalidHostnames(params.sslAllowInvalidHostnames),
       _suppressNoCertificateWarning(params.suppressNoTLSPeerCertificateWarning) {     
 
-    if (!_initSynchronousSSLContext(&_clientContext, params, ConnectionDirection::kOutgoing)) {
-        uasserted(16768, "ssl initialization problem");
-    }
+    /* --- Robo 1.3
+    *      Disabling all ctor code, Robo will run client related parts for each new connection in reinitiateSSLManager()
+    */ 
+    // if (!_initSynchronousSSLContext(&_clientContext, params, ConnectionDirection::kOutgoing)) {
+    //     uasserted(16768, "ssl initialization problem");
+    // }
 
-    // pick the certificate for use in outgoing connections,
-    std::string clientPEM, clientPassword;
-    if (!isServer || params.sslClusterFile.empty()) {
-        // We are either a client, or a server without a cluster key,
-        // so use the PEM key file, if specified
-        clientPEM = params.sslPEMKeyFile;
-        clientPassword = params.sslPEMKeyPassword;
-    } else {
-        // We are a server with a cluster key, so use the cluster key file
-        clientPEM = params.sslClusterFile;
-        clientPassword = params.sslClusterPassword;
-    }
+    // // pick the certificate for use in outgoing connections,
+    // std::string clientPEM, clientPassword;
+    // if (!isServer || params.sslClusterFile.empty()) {
+    //     // We are either a client, or a server without a cluster key,
+    //     // so use the PEM key file, if specified
+    //     clientPEM = params.sslPEMKeyFile;
+    //     clientPassword = params.sslPEMKeyPassword;
+    // } else {
+    //     // We are a server with a cluster key, so use the cluster key file
+    //     clientPEM = params.sslClusterFile;
+    //     clientPassword = params.sslClusterPassword;
+    // }
 
-    if (!clientPEM.empty()) {
-        if (!_parseAndValidateCertificate(
-                clientPEM, clientPassword, &_sslConfiguration.clientSubjectName, NULL)) {
-            uasserted(16941, "ssl initialization problem");
-        }
-    }
-    // SSL server specific initialization
-    if (isServer) {
-        if (!_initSynchronousSSLContext(&_serverContext, params, ConnectionDirection::kIncoming)) {
-            uasserted(16562, "ssl initialization problem");
-        }
+    // if (!clientPEM.empty()) {
+    //     if (!_parseAndValidateCertificate(
+    //             clientPEM, clientPassword, &_sslConfiguration.clientSubjectName, NULL)) {
+    //         uasserted(16941, "ssl initialization problem");
+    //     }
+    // }
+    // // SSL server specific initialization
+    // if (isServer) {
+    //     if (!_initSynchronousSSLContext(&_serverContext, params, ConnectionDirection::kIncoming)) {
+    //         uasserted(16562, "ssl initialization problem");
+    //     }
 
-        if (!_parseAndValidateCertificate(params.sslPEMKeyFile,
-                                          params.sslPEMKeyPassword,
-                                          &_sslConfiguration.serverSubjectName,
-                                          &_sslConfiguration.serverCertificateExpirationDate)) {
-            uasserted(16942, "ssl initialization problem");
-        }
+    //     if (!_parseAndValidateCertificate(params.sslPEMKeyFile,
+    //                                       params.sslPEMKeyPassword,
+    //                                       &_sslConfiguration.serverSubjectName,
+    //                                       &_sslConfiguration.serverCertificateExpirationDate)) {
+    //         uasserted(16942, "ssl initialization problem");
+    //     }
 
-        static CertificateExpirationMonitor task =
-            CertificateExpirationMonitor(_sslConfiguration.serverCertificateExpirationDate);
-    }
+    //     static CertificateExpirationMonitor task =
+    //         CertificateExpirationMonitor(_sslConfiguration.serverCertificateExpirationDate);
+    // }
+    /* --- Robo 1.3 --- */
 }
 
-/* Trying to replicate the SSL client related parts of the ctor */
 bool SSLManagerOpenSSL::reinitiateSSLManager() 
 {
     auto const& params = getSSLGlobalParams();
@@ -675,6 +678,7 @@ bool SSLManagerOpenSSL::reinitiateSSLManager()
     _allowInvalidHostnames = params.sslAllowInvalidHostnames;
     _suppressNoCertificateWarning = params.suppressNoTLSPeerCertificateWarning;
 
+    /* --- Try to replicate the client related parts of the ctor --- */
     if (!_initSynchronousSSLContext(&_clientContext, params, ConnectionDirection::kOutgoing))
         return false;
 
@@ -686,13 +690,15 @@ bool SSLManagerOpenSSL::reinitiateSSLManager()
         clientPEM = params.sslPEMKeyFile;
         clientPassword = params.sslPEMKeyPassword;
     } 
-
-    if (!clientPEM.empty()) {
-        if (!_parseAndValidateCertificate(
-                clientPEM, clientPassword, &_sslConfiguration.clientSubjectName, NULL)) {
-            uasserted(916941, "ssl initialization problem");
-        }
+    else { // Robo 1.3
+        clientPEM.clear();
+        clientPassword.clear();
     }
+
+    if (!clientPEM.empty() &&
+        !_parseAndValidateCertificate(
+            clientPEM, clientPassword, &_sslConfiguration.clientSubjectName, NULL))
+            return false;
 
     return true;
  }
