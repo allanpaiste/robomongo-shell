@@ -231,7 +231,12 @@ static inline void js_free(void* p)
 static inline char* js_strdup(const char* s)
 {
     JS_OOM_POSSIBLY_FAIL();
+// Robo 1.3: To stop _strdup warning on Windows
+#ifdef _WIN32
+    return _strdup(s);
+#else
     return strdup(s);
+#endif  
 }
 #endif/* JS_USE_CUSTOM_ALLOCATOR */
 
