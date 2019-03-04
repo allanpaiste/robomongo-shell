@@ -169,7 +169,8 @@ public:
         return _database;
     }
 
-    std::string getAuthenticationDatabase() {
+    // Robo 1.3: Making it const function
+    std::string getAuthenticationDatabase() const {
         auto authDB = _options.find("authSource");
         if (authDB != _options.end()) {
             return authDB->second;
