@@ -29,6 +29,8 @@
  */
 
 #pragma once
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdefaulted-function-deleted"
 
 #include "asio/detail/config.hpp"
 #include "asio/detail/noncopyable.hpp"

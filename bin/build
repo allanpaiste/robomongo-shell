@@ -1,7 +1,13 @@
 #!/usr/bin/env bash
 
-BIN_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"       # Get directory of this file
-PROJECT_DIR=$(dirname $BIN_DIR)                                   # Get root directory of project
+FILE_PATH="$(pwd)/bin/configure"
+
+BIN_DIR="$( cd "$( dirname "${FILE_PATH}" )" && pwd )"       # Get directory of this file
+PROJECT_DIR=$(dirname $BIN_DIR)                                           # Get root directory of project
+
+echo "Bin dir: ${BIN_DIR}"
+echo "Project dir: ${PROJECT_DIR}"
+
 source $BIN_DIR/common/setup $1
 
 # Find OpenSSL directory
@@ -21,7 +27,7 @@ fi
 # Build mongo in release mode by default 
 # Hint: Type 'build debug' for debug mode)
 BUILD_TYPE_STR=release
-if [ $1 == debug ]; then
+if [ "${1}" == "debug" ]; then
   BUILD_TYPE=--dbg
   BUILD_TYPE_STR=debug
 fi
@@ -38,7 +44,11 @@ echo Building in $BUILD_TYPE_STR mode:
 echo -------------------------------------
 
 if [ "$(uname)" == "Darwin" ]; then
-  scons mongo --ssl CCFLAGS=$MACOS_FLAGS LINKFLAGS=$MACOS_FLAGS CPPPATH=$OPENSSL_PATH/include LIBPATH=$OPENSSL_PATH/lib -j8 $BUILD_TYPE
+  scons mongo \
+    --ssl CCFLAGS=$MACOS_FLAGS LINKFLAGS=$MACOS_FLAGS \
+    CPPPATH=$OPENSSL_PATH/include \
+    LIBPATH=$OPENSSL_PATH/lib \
+    -j8 $BUILD_TYPE
 elif [ "$(expr substr $(uname -s) 1 5)" == "Linux" ]; then
   scons mongo --ssl CPPPATH=$OPENSSL_PATH/include LIBPATH=$OPENSSL_PATH/lib -j8 $BUILD_TYPE
 else 

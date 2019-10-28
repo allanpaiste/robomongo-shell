@@ -8,6 +8,9 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wreturn-std-move"
+
 #ifndef ASIO_IP_BASIC_RESOLVER_RESULTS_HPP
 #define ASIO_IP_BASIC_RESOLVER_RESULTS_HPP
 
