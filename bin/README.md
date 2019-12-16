@@ -5,31 +5,15 @@ Build MongoDB
 -------------
 
 Build in release mode:
-
-    brew install scons openssl
-    sudo easy_install pip
-    pip install virtualenv
-    
-    # Make sure to add Python bin to .bash_profile:
-    # export PATH="${PATH}:/Users/allanpaiste/Library/Python/2.7/bin"
-    
-    # Make sure you have these dudes configured (python requires those to have valid value)
-    # export LC_ALL=en_US.UTF-8
-    # export LANG=en_US.UTF-8
  
-    virtualenv --python=python2 venv
-    
-    pip install typed
-    sudo pip install Cheetah
-    pip install pyyaml
-    
-    export ROBOMONGO_CMAKE_PREFIX_PATH="${ROBOMONGO_CMAKE_PREFIX_PATH};/usr/local/Cellar/openssl/1.0.2t"
-    
+    $ bin/setup 
     $ bin/build
     
 Build in debug mode:
 
     $ bin/build debug
+    
+Note that when you want to build Robomongo in debug mode, you also have to build shell in debug mode beforehand. 
 
 Clean output files
 ------------------
@@ -41,4 +25,3 @@ Clean release output
 Clean debug output
 
     $ bin/clean debug
-

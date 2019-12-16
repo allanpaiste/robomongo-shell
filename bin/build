@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 
-FILE_PATH="$(pwd)/bin/configure"
+FILE_PATH="$(pwd)/${BASH_SOURCE[0]}"
+BIN_DIR="$(cd "$(dirname "${FILE_PATH}")" && pwd)"
 
-BIN_DIR="$( cd "$( dirname "${FILE_PATH}" )" && pwd )"       # Get directory of this file
-PROJECT_DIR=$(dirname $BIN_DIR)                                           # Get root directory of project
+source ${BIN_DIR}/common/setup ${1}
 
 echo "Bin dir: ${BIN_DIR}"
 echo "Project dir: ${PROJECT_DIR}"

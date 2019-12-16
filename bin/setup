@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+
+FILE_PATH="$(pwd)/${BASH_SOURCE[0]}"
+BIN_DIR="$(cd "$(dirname "${FILE_PATH}")" && pwd)"
+
+source ${BIN_DIR}/common/setup ${1}
+
+echo "Bin dir: ${BIN_DIR}"
+echo "Project dir: ${PROJECT_DIR}"
+
+brew install scons openssl
+sudo easy_install pip
+pip install virtualenv
+
+USER_HOME=$(cd ~ && pwd)
+
+# Make sure to add Python bin to .bash_profile:
+# export PATH="\${PATH}:${USER_HOME}/Library/Python/2.7/bin"
+
+# Make sure you have these dudes configured (python requires those to have valid value)
+# export LC_ALL=en_US.UTF-8
+# export LANG=en_US.UTF-8
+
+virtualenv --python=python2 venv
+
+pip install typed
+sudo pip install Cheetah
+pip install pyyaml
+
+export ROBOMONGO_CMAKE_PREFIX_PATH="${ROBOMONGO_CMAKE_PREFIX_PATH};/usr/local/Cellar/openssl/1.0.2t"
