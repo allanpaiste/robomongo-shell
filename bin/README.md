@@ -17,22 +17,19 @@ Build in release mode:
     # export LC_ALL=en_US.UTF-8
     # export LANG=en_US.UTF-8
  
-    
     virtualenv --python=python2 venv
-
-
+    
     pip install typed
     sudo pip install Cheetah
     pip install pyyaml
     
-    export ROBOMONGO_CMAKE_PREFIX_PATH="${ROBOMONGO_CMAKE_PREFIX_PATH};/usr/local/Cellar/openssl@1.1/1.1.1d"
+    export ROBOMONGO_CMAKE_PREFIX_PATH="${ROBOMONGO_CMAKE_PREFIX_PATH};/usr/local/Cellar/openssl/1.0.2t"
     
     $ bin/build
     
 Build in debug mode:
 
     $ bin/build debug
-
 
 Clean output files
 ------------------

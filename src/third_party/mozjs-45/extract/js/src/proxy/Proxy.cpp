@@ -452,8 +452,8 @@ Proxy::className(JSContext* cx, HandleObject proxy)
     // Check for unbounded recursion, but don't signal an error; className
     // needs to be infallible.
     int stackDummy;
-    if (!JS_CHECK_STACK_SIZE(GetNativeStackLimit(cx), &stackDummy))
-        return "too much recursion";
+//    if (!JS_CHECK_STACK_SIZE(GetNativeStackLimit(cx), &stackDummy))
+//        return "too much recursion";
 
     const BaseProxyHandler* handler = proxy->as<ProxyObject>().handler();
     AutoEnterPolicy policy(cx, handler, proxy, JSID_VOIDHANDLE,
