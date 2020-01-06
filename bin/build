@@ -1,9 +1,19 @@
 #!/usr/bin/env bash
 
+deactivate 2>/dev/null
+
+if [ ! -f venv/bin/activate ] ; then
+ echo "Error: please run bin/setup before building"
+ exit 1
+fi
+
+source venv/bin/activate
+
 FILE_PATH="$(pwd)/${BASH_SOURCE[0]}"
 BIN_DIR="$(cd "$(dirname "${FILE_PATH}")" && pwd)"
 
 source ${BIN_DIR}/common/setup ${1}
+source ${BIN_DIR}/common/config
 
 echo "Bin dir: ${BIN_DIR}"
 echo "Project dir: ${PROJECT_DIR}"
@@ -18,6 +28,7 @@ for i in $(echo $ROBOMONGO_CMAKE_PREFIX_PATH | tr ";" "\n")
    OPENSSL_PATH=$i
   fi
 done
+
 if [ $OPENSSL_PATH == UNKNOWN ]; then
  echo -e "Error: Build failed, ROBOMONGO_CMAKE_PREFIX_PATH must contain correct -  
           path to openssl-1.0.2o (i.e. /home/user/openssl-1.0.1o)"
@@ -54,3 +65,5 @@ elif [ "$(expr substr $(uname -s) 1 5)" == "Linux" ]; then
 else 
   echo -e "Error: Unsupported platform" 
 fi
+
+deactivate

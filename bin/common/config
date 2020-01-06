@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+
+USER_HOME=$(cd ~ && pwd)
+
+export LC_ALL=en_US.UTF-8
+export LANG=en_US.UTF-8
+
+export PATH="${PATH}:${USER_HOME}/Library/Python/2.7/bin"
+export ROBOMONGO_CMAKE_PREFIX_PATH="${ROBOMONGO_CMAKE_PREFIX_PATH};/usr/local/Cellar/openssl/1.0.2t"

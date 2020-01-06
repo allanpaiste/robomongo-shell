@@ -15,6 +15,7 @@ fi
 # Set path according to build type
 # "/opt" for release, "/debug" for debug mode
 BUILD_PATH=opt
+
 if [ "$1" == "debug" ]; then
   BUILD_PATH=debug
 fi

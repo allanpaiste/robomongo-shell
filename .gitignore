@@ -151,6 +151,9 @@ CMakeLists.txt
 # VSCode projects
 .vscode/
 
+# Python environments
+venv/
+
 # Windows MSI builder artifacts
 *.msi
 *.wixobj
