@@ -5,22 +5,17 @@ BIN_DIR="$(cd "$(dirname "${FILE_PATH}")" && pwd)"
 
 deactivate 2>/dev/null
 
-source ${BIN_DIR}/common/setup ${1}
 source ${BIN_DIR}/common/config
+source ${BIN_DIR}/common/setup ${1}
 
 echo "Bin dir: ${BIN_DIR}"
 echo "Project dir: ${PROJECT_DIR}"
 
-brew install scons openssl
-sudo easy_install pip
+if ! brew info scons &>/dev/null ; then
+    brew install scons
+fi
 
-# If the above fails:
-#
-# sudo -H pip install pip --user --upgrade
-# sudo apt-get install python3-pip
-# sudo pip3 install --upgrade setuptools
-#
-# ... then run 'easy_install' command again
+sudo easy_install pip
 
 pip install virtualenv
 

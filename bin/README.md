@@ -1,32 +1,72 @@
 Bash frontend for Scons
 =======================
 
-Build MongoDB
+The following guide covers the steps/extras needed to build Robomongo Shell.
+
+Prerequisites
 -------------
 
-If you want to use this scripts, you need to set single environment variable:
+Note that this guide DOES assume that all the dependencies/sources share same root path (example: every library is within
+the folder /my/projects). This requirement/recommendation DOES include this project as well. 
+
+If you don't have such a setup for dependent libraries in such a way, you are STRONGLY encouraged to do so. 
+
+Install Homebrew
+""""""""""""""""
+
+This will just make the installation of certain libraries so much easier.
 
 ```shell
-brew install qt gcc cmake openssl
+/usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
+``` 
 
-OPENSSL_ROOT=/usr/local/Cellar/openssl/1.0.2t
+Install Open SSL
+""""""""""""""""
 
-cp ${OPENSSL_ROOT}/lib/libssl.dylib ${OPENSSL_ROOT}/libssl.dylib
-cp ${OPENSSL_ROOT}/lib/libcrypto.dylib ${OPENSSL_ROOT}/libcrypto.dylib
-cp ${OPENSSL_ROOT}/libssl.dylib ${OPENSSL_ROOT}/libssl.1.0.0.dylib
-cp ${OPENSSL_ROOT}/libcrypto.dylib ${OPENSSL_ROOT}/libcrypto.1.0.0.dylib
+This guide assumes that you are in the root of the repositories 
+
+```shell
+curl -LO https://www.openssl.org/source/old/1.0.2/openssl-1.0.2u.tar.gz > openssl-1.0.2u.tar.gz
+tar -xvzf openssl-1.0.2*.tar.gz
+rm openssl-1.0.2u.tar.gz
+mv openssl-* openssl
+
+cd openssl
+./Configure darwin64-x86_64-cc shared --openssldir="@rpath"
+
+make -j9
+
+# You might be getting "WARNING: can't open config file: @rpath/@rpath/openssl.cnf" at the end end of 
+# the build process which you can ignore 
 ```
+
+Install Gcc & CMake 
+"""""""""""""""""""
+
+```shell
+brew install gcc cmake
+```
+
+Build MongoDB
+-------------
 
 Build in release mode:
  
 ```shell
-bin/setup 
-bin/build
+# Release
+bin/setup
+
+# Debug/Develop
+bin/setup debug 
 ```   
  
 Build in debug mode:
 
 ```shell
+# Release
+bin/build
+
+# Debug/Develop
 bin/build debug
 ```   
     
