@@ -168,3 +168,4 @@ src/mongo/embedded/java/jar/build/
 local.properties
 
 compile_commands.json
+get-pip.py

@@ -12,12 +12,20 @@ echo "Bin dir: ${BIN_DIR}"
 echo "Project dir: ${PROJECT_DIR}"
 
 if ! brew info scons &>/dev/null ; then
+    sudo chown -R $(whoami) /usr/local/share/man/man5
     brew install scons
 fi
 
-sudo easy_install pip
+curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py
+python get-pip.py
 
-pip install virtualenv
+if which pip2.7 &>/dev/null ; then
+    pip2.7 uninstall virtualenv
+    pip2.7 install virtualenv
+else
+    pip uninstall virtualenv
+    pip install virtualenv
+fi
 
 virtualenv --python=python2.7 venv
 
