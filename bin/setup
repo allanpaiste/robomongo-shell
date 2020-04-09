@@ -20,11 +20,11 @@ curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py
 python get-pip.py
 
 if which pip2.7 &>/dev/null ; then
-    pip2.7 uninstall virtualenv
-    pip2.7 install virtualenv
+    sudo pip2.7 uninstall virtualenv
+    sudo pip2.7 install virtualenv
 else
-    pip uninstall virtualenv
-    pip install virtualenv
+    sudo pip uninstall virtualenv
+    sudo pip install virtualenv
 fi
 
 virtualenv --python=python2.7 venv

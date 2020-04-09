@@ -56,7 +56,7 @@ echo -------------------------------------
 
 if [ "$(uname)" == "Darwin" ]; then
   scons mongo \
-    --ssl CCFLAGS=$MACOS_FLAGS LINKFLAGS=$MACOS_FLAGS \
+    --ssl CCFLAGS=$MACOS_FLAGS LINKFLAGS="$MACOS_FLAGS" \
     CPPPATH=$OPENSSL_PATH/include \
     LIBPATH=$OPENSSL_PATH/lib \
     -j8 $BUILD_TYPE
