@@ -12,6 +12,7 @@ pyyaml = "*"
 virtualenv = "*"
 typing = "*"
 regex = "*"
+scons = "*"
 
 [requires]
 python_version = "2.7"

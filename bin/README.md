@@ -37,7 +37,7 @@ cd openssl
 make -j9
 
 # You might be getting "WARNING: can't open config file: @rpath/@rpath/openssl.cnf" at the end end of 
-# the build process which you can ignore 
+# the build process which you CAN ignore 
 ```
 
 Install Gcc & CMake 
@@ -47,6 +47,13 @@ Install Gcc & CMake
 brew install gcc cmake
 ```
 
+Install Python dependencies 
+"""""""""""""""""""""""""""
+
+```shell
+bin/setup
+```
+
 Build MongoDB
 -------------
 
@@ -54,10 +61,10 @@ Build in release mode:
  
 ```shell
 # Release
-bin/setup
+bin/configure
 
 # Debug/Develop
-bin/setup debug 
+bin/configure debug 
 ```   
  
 Build in debug mode:

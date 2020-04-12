@@ -2,11 +2,9 @@
 
 FILE_PATH="$(pwd)/${BASH_SOURCE[0]}"
 BIN_DIR="$(cd "$(dirname "${FILE_PATH}")" && pwd)"
+PROJECT_DIR=$(dirname $BIN_DIR)
 
 deactivate 2>/dev/null
-
-source ${BIN_DIR}/common/config
-source ${BIN_DIR}/common/setup ${1}
 
 echo "Bin dir: ${BIN_DIR}"
 echo "Project dir: ${PROJECT_DIR}"
@@ -18,13 +16,29 @@ fi
 
 curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py
 python get-pip.py
+rm get-pip.py
+
+_is_macosx() {
+    if [[ "${OSTYPE}" == "darwin"* ]]; then
+        return 0
+    fi
+
+    return 1
+}
+
+# @TODO: automatically add BIN source to bash_profile when needed
+# export PATH="$PATH:/Users/$(whoami)/Library/Python/2.7/bin"
+
+# @TODO: autoamtic setup for locales
+# export LC_ALL=en_US.UTF-8
+# export LANG=en_US.UTF-8
+
+# Use similar approach to this: echo 'export PATH="/usr/local/opt/llvm/bin:$PATH"' >> ~/.bash_profile
 
 if which pip2.7 &>/dev/null ; then
-    sudo pip2.7 uninstall virtualenv
-    sudo pip2.7 install virtualenv
+    sudo pip2.7 install --ignore-installed virtualenv pipenv
 else
-    sudo pip uninstall virtualenv
-    sudo pip install virtualenv
+    sudo pip install --ignore-installed virtualenv pipenv
 fi
 
 virtualenv --python=python2.7 venv
@@ -34,3 +48,5 @@ source venv/bin/activate
 pipenv install
 
 deactivate
+
+echo "Please read the guide @ bin/README.md for manual setup steps of dependencies"
